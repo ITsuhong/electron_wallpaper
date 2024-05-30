@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import initIpcEvent from "./ipcEvent.ts";
+import { getWallpaper, setWallpaper } from "wallpaper";
 
 declare global {
   var mainWindow: BrowserWindow;
@@ -56,6 +57,9 @@ function createWindow() {
     // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
+  setWallpaper(
+    "https://images.pexels.com/photos/24245176/pexels-photo-24245176.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load",
+  );
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
