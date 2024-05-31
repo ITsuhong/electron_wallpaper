@@ -96,3 +96,7 @@ button:focus-visible {
 .cusFont {
     font-family: openSans;
 }
+
+img {
+    object-fit: cover;
+}
