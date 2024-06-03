@@ -1,10 +1,15 @@
-import { ipcMain } from "electron";
+import { ipcMain, BrowserWindow } from "electron";
 import { exec } from "child_process";
 import fs from "fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import https from "https";
 import { getSuffix, randomString } from "./util.ts";
+import { createWindow } from "./windows/dynamicWallpaper.ts";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+declare global {
+  var wallpaperWin: BrowserWindow;
+}
 
 export default function () {
   ipcMain.on("hide-window", () => {
@@ -12,7 +17,16 @@ export default function () {
   });
   ipcMain.on("set-wallpaper", async (_, args) => {
     const path = await downloadImage(args);
-    setWallpaper(path);
+    if (process.platform == "darwin") {
+      // setMacwallpaper(path);
+      setdynamic();
+    }
+    if (process.platform == "win32") {
+      setWinWallpaper(path);
+    }
+  });
+  ipcMain.on("create-window", async (_, args) => {
+    global.wallpaperWin = createWindow(BrowserWindow);
   });
 }
 
@@ -42,7 +56,18 @@ function downloadImage(url: string): Promise<string> {
   });
 }
 
-function setWallpaper(imagePath: string) {
+function setdynamic() {
+  const scriptPath = path.join(__dirname, "set-wallpaper.scpt");
+  exec(`osascript ${scriptPath}`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error: ${stderr}`);
+    } else {
+      console.log(`Output: ${stdout}`);
+    }
+  });
+}
+
+function setWinWallpaper(imagePath: string) {
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const script = `
   [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") | Out-Null
@@ -90,4 +115,26 @@ public class Wallpaper {
       fs.unlinkSync(tempFilePath);
     },
   );
+}
+
+function setMacwallpaper(imagePath: string) {
+  const script = `
+        tell application "System Events"
+            set desktopCount to count of desktops
+            repeat with desktopNumber from 1 to desktopCount
+                tell desktop desktopNumber
+                    set picture to "${imagePath}"
+                end tell
+            end repeat
+        end tell
+        `;
+  exec(`osascript -e '${script}'`, (error, stdout, stderr) => {
+    if (error) {
+      console.error("Error changing wallpaper:", error);
+      console.error(stderr);
+    } else {
+      console.log("Wallpaper changed successfully!");
+      console.log(stdout);
+    }
+  });
 }

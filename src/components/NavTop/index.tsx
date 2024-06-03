@@ -25,7 +25,7 @@ const NavTop: React.FC = () => {
   const [activeNav, setActiveNav] = useState<string>("动态壁纸");
   const handleOptionHide = () => {
     console.log(window);
-    window.ipcRenderer.send("hide-window");
+    window.ipcRenderer.send("create-window");
   };
   const handleOptionNav = (record: any) => {
     setActiveNav(record.name);
